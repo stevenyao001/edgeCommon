@@ -4,6 +4,10 @@ import "database/sql"
 
 var tdEnginePool map[string]*sql.DB
 
+func init() {
+	tdEnginePool = make(map[string]*sql.DB)
+}
+
 type TdEngine struct {
 	Db        *sql.DB
 	InsName   string

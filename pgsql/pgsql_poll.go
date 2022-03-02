@@ -4,6 +4,10 @@ import "database/sql"
 
 var pgPool map[string]*sql.DB
 
+func init() {
+	pgPool = make(map[string]*sql.DB)
+}
+
 type Postgres struct {
 	Db        *sql.DB
 	InsName   string
