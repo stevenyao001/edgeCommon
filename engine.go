@@ -1,13 +1,13 @@
 package edgeCommon
 
 import (
-	"github.com/gd1024/edge_common/config"
-	"github.com/gd1024/edge_common/http"
-	logger2 "github.com/gd1024/edge_common/logger"
-	"github.com/gd1024/edge_common/mqtt"
-	"github.com/gd1024/edge_common/pgsql"
-	"github.com/gd1024/edge_common/tdengine"
 	"github.com/gin-gonic/gin"
+	"github.com/stevenyao001/edgeCommon/config"
+	"github.com/stevenyao001/edgeCommon/http"
+	logger2 "github.com/stevenyao001/edgeCommon/logger"
+	"github.com/stevenyao001/edgeCommon/mqtt"
+	"github.com/stevenyao001/edgeCommon/pgsql"
+	"github.com/stevenyao001/edgeCommon/tdengine"
 )
 
 type engine struct {
