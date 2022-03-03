@@ -46,20 +46,19 @@ func InitHttp(conf Conf, middleware ...gin.HandlerFunc) {
 	}
 
 	go func() {
-		<- conf.Close
+		//监听端口
+		err = server.Serve(l)
+		fmt.Println("----- serve close", time.Now().Format("2006-01-02 15:04:05.999999999"), err)
+	}()
+
+	go func() {
+		<-conf.Close
 		ctx, cancel := context.WithTimeout(context.Background(), conf.ShutdownTimeout)
 		defer cancel()
 		err = server.Shutdown(ctx)
 		fmt.Println("----- serve shutdown", time.Now().Format("2006-01-02 15:04:05.999999999"), err)
-	}()
-
-	go func() {
-		//监听端口
-		err = server.Serve(l)
 		conf.Wg.Done()
-		fmt.Println("----- serve close", time.Now().Format("2006-01-02 15:04:05.999999999"), err)
 	}()
-
 }
 
 type respEntity struct {
