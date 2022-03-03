@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type RedisConf struct {
+type Conf struct {
 	InsName      string `json:"ins_name"`
 	Addr         string `json:"addr"`
 	Auth         string `json:"auth"`
@@ -17,7 +17,7 @@ type RedisConf struct {
 	MinIdleConns int    `json:"min_idle_conns"`
 }
 
-func InitRedis(redisConf []RedisConf) {
+func InitRedis(redisConf []Conf) {
 
 	for _, conf := range redisConf {
 
