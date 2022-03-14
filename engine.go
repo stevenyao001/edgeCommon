@@ -3,6 +3,7 @@ package edgeCommon
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/stevenyao001/edgeCommon/config"
+	"github.com/stevenyao001/edgeCommon/emqx"
 	"github.com/stevenyao001/edgeCommon/http"
 	"github.com/stevenyao001/edgeCommon/logger"
 	"github.com/stevenyao001/edgeCommon/mqtt"
@@ -16,6 +17,7 @@ type EdgeCommon interface {
 	RegisterLogger(logPath string)
 	RegisterHttp(conf http.Conf, middleware ...gin.HandlerFunc)
 	RegisterMqtt(conf []mqtt.Conf, subOpts map[string][]mqtt.SubscribeOpts)
+	RegisterEmqx(conf []emqx.Conf) *emqx.Engine
 	RegisterPgsql(conf []pgsql.Conf)
 	RegisterRedis(conf []redis.Conf)
 	RegisterTdEngine(conf []tdengine.Conf)
@@ -38,6 +40,10 @@ func (e *engine) RegisterLogger(logPath string) {
 
 func (e *engine) RegisterMqtt(conf []mqtt.Conf, subOpts map[string][]mqtt.SubscribeOpts) {
 	mqtt.InitMqtt(conf, subOpts)
+}
+
+func (e *engine) RegisterEmqx(conf []emqx.Conf) *emqx.Engine {
+	return emqx.InitEmqx(conf)
 }
 
 func (e *engine) RegisterPgsql(conf []pgsql.Conf) {

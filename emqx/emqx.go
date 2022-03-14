@@ -21,7 +21,7 @@ type Engine struct {
 }
 
 // Init EMQX init
-func Init(confs []Conf) *Engine {
+func InitEmqx(confs []Conf) *Engine {
 	clis := make([]mqtt.Client, 0)
 	for k := range confs {
 		conf := confs[k]
