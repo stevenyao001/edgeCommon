@@ -4,17 +4,28 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stevenyao001/edgeCommon/config"
 	"github.com/stevenyao001/edgeCommon/http"
-	logger2 "github.com/stevenyao001/edgeCommon/logger"
+	"github.com/stevenyao001/edgeCommon/logger"
 	"github.com/stevenyao001/edgeCommon/mqtt"
 	"github.com/stevenyao001/edgeCommon/pgsql"
+	"github.com/stevenyao001/edgeCommon/redis"
 	"github.com/stevenyao001/edgeCommon/tdengine"
 )
 
-type engine struct {
+type EdgeCommon interface {
+	RegisterConfig(filePath string, conf interface{})
+	RegisterLogger(logPath string)
+	RegisterHttp(conf http.Conf, middleware ...gin.HandlerFunc)
+	RegisterMqtt(conf []mqtt.Conf, subOpts map[string][]mqtt.SubscribeOpts)
+	RegisterPgsql(conf []pgsql.Conf)
+	RegisterRedis(conf []redis.Conf)
+	RegisterTdEngine(conf []tdengine.Conf)
 }
 
-func New() *engine {
-	return &engine{}
+func New() EdgeCommon {
+	return new(engine)
+}
+
+type engine struct {
 }
 
 func (e *engine) RegisterConfig(filePath string, conf interface{}) {
@@ -22,21 +33,25 @@ func (e *engine) RegisterConfig(filePath string, conf interface{}) {
 }
 
 func (e *engine) RegisterLogger(logPath string) {
-	logger2.InitLog(logPath)
+	logger.InitLog(logPath)
 }
 
-func (e *engine) RegisterMqtt(confs []mqtt.Conf, subOpts map[string][]mqtt.SubscribeOpts) {
-	mqtt.InitMqtt(confs, subOpts)
+func (e *engine) RegisterMqtt(conf []mqtt.Conf, subOpts map[string][]mqtt.SubscribeOpts) {
+	mqtt.InitMqtt(conf, subOpts)
 }
 
-func (e *engine) RegisterPgsql(pgConf []pgsql.Conf) {
-	pgsql.InitPgsql(pgConf)
+func (e *engine) RegisterPgsql(conf []pgsql.Conf) {
+	pgsql.InitPgsql(conf)
 }
 
-func (e *engine) RegisterTdEngine(tdConf []tdengine.Conf) {
-	tdengine.InitTdEngine(tdConf)
+func (e *engine) RegisterTdEngine(conf []tdengine.Conf) {
+	tdengine.InitTdEngine(conf)
 }
 
-func (e *engine) RegisterHttp(httpConf http.Conf, middleware ...gin.HandlerFunc) {
-	http.InitHttp(httpConf, middleware...)
+func (e *engine) RegisterHttp(conf http.Conf, middleware ...gin.HandlerFunc) {
+	http.InitHttp(conf, middleware...)
+}
+
+func (e *engine) RegisterRedis(conf []redis.Conf) {
+	redis.InitRedis(conf)
 }

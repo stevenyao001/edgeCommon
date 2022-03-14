@@ -31,7 +31,7 @@ func InitTdEngine(tdConf []Conf) {
 
 	for _, conf := range tdConf {
 
-		url := fmt.Sprintf("%s:%s@/%s(%s:%d)/%s", conf.Username, conf.Password, conf.Network, conf.Addr, conf.Port, conf.Db)
+		url := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", conf.Username, conf.Password, conf.Network, conf.Addr, conf.Port, conf.Db)
 		db, err := sql.Open(conf.Driver, url)
 		if err != nil {
 			panic("init td engine err : " + err.Error())

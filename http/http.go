@@ -19,6 +19,7 @@ type Conf struct {
 	ShutdownTimeout time.Duration
 	Router          func(router *gin.Engine)
 	Wg              *sync.WaitGroup
+	Close           chan struct{}
 }
 
 func InitHttp(conf Conf, middleware ...gin.HandlerFunc) {
@@ -45,17 +46,19 @@ func InitHttp(conf Conf, middleware ...gin.HandlerFunc) {
 	}
 
 	go func() {
-		conf.Wg.Wait()
+		//监听端口
+		err = server.Serve(l)
+		fmt.Println("----- serve close", time.Now().Format("2006-01-02 15:04:05.999999999"), err)
+	}()
+
+	go func() {
+		<-conf.Close
 		ctx, cancel := context.WithTimeout(context.Background(), conf.ShutdownTimeout)
 		defer cancel()
 		err = server.Shutdown(ctx)
 		fmt.Println("----- serve shutdown", time.Now().Format("2006-01-02 15:04:05.999999999"), err)
+		conf.Wg.Done()
 	}()
-
-	//监听端口
-	err = server.Serve(l)
-	fmt.Println("----- serve close", time.Now().Format("2006-01-02 15:04:05.999999999"), err)
-
 }
 
 type respEntity struct {
