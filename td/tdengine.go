@@ -20,7 +20,11 @@ type Conf struct {
 	MaxOpenConns int    `json:"max_open_conns"`
 }
 
-func InitTd(tdConf []Conf) map[string]*sql.DB {
+type Engine struct {
+	TDGroup
+}
+
+func InitTd(tdConf []Conf) *Engine {
 	tdEnginePool := make(map[string]*sql.DB)
 
 	for _, conf := range tdConf {
@@ -38,5 +42,6 @@ func InitTd(tdConf []Conf) map[string]*sql.DB {
 
 		tdEnginePool[conf.InsName] = db
 	}
-	return tdEnginePool
+	engin := &Engine{TDGroup{Clients: tdEnginePool}}
+	return engin
 }
