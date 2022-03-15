@@ -7,8 +7,8 @@ import (
 )
 
 type DataAction interface {
-	SubData()
-	PubData()
+	SubData(topic string, qos byte, callback func(client mqtt.Client, message mqtt.Message)) error
+	PubData(topic string, qos byte, data interface{}) error
 }
 
 type EMQXGroup struct {

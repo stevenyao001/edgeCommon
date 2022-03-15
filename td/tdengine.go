@@ -25,7 +25,7 @@ type Engine struct {
 }
 
 func InitTd(tdConf []Conf) *Engine {
-	tdEnginePool := make(map[string]*sql.DB)
+	tdEnginePool := make([]*sql.DB, 0)
 
 	for _, conf := range tdConf {
 
@@ -40,7 +40,7 @@ func InitTd(tdConf []Conf) *Engine {
 		//db.SetConnMaxLifetime(time.Duration(conf.MaxLifeTime) * time.Second)
 		db.SetMaxOpenConns(conf.MaxOpenConns)
 
-		tdEnginePool[conf.InsName] = db
+		tdEnginePool = append(tdEnginePool, db)
 	}
 	engin := &Engine{TDGroup{Clients: tdEnginePool}}
 	return engin

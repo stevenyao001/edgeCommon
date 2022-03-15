@@ -5,36 +5,43 @@ import (
 )
 
 type DataAction interface {
-	SubData()
-	PubData()
+	Query()
+	Scan()
+	Exec()
 }
 
 type TDGroup struct {
-	Clients map[string]*sql.DB
+	Clients []*sql.DB
+	Rows    []*sql.Rows
 }
 
-func (group *TDGroup) Find(insName string, sql string, dest ...interface{}) error {
-	db := group.Clients[insName]
-	rows, err := db.Query(sql)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		rows.Scan(dest)
+func (group *TDGroup) Query(sql string) error {
+	for _, db := range group.Clients {
+		rows, err := db.Query(sql)
 		if err != nil {
 			return err
+		}
+		group.Rows = append(group.Rows, rows)
+	}
+	return nil
+}
+
+func (group *TDGroup) Scan(dest ...interface{}) error {
+	for _, rows := range group.Rows {
+		defer rows.Close()
+		for rows.Next() {
+			return rows.Scan(dest)
 		}
 	}
 	return nil
 }
 
-func (group *TDGroup) Insert(insName string, sql string) error {
-	db := group.Clients[insName]
-	_, err := db.Exec(sql)
-	if err != nil {
-		return err
+func (group *TDGroup) Exec(sql string) error {
+	for _, db := range group.Clients {
+		_, err := db.Exec(sql)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
