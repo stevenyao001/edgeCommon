@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type DataContest interface {
+type DataAction interface {
 	SubData()
 	PubData()
 }
