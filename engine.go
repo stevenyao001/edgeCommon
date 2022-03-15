@@ -1,7 +1,6 @@
 package edgeCommon
 
 import (
-	"database/sql"
 	"github.com/gin-gonic/gin"
 	"github.com/stevenyao001/edgeCommon/config"
 	"github.com/stevenyao001/edgeCommon/emqx"
@@ -23,7 +22,7 @@ type EdgeCommon interface {
 	RegisterPgsql(conf []pgsql.Conf)
 	RegisterRedis(conf []redis.Conf)
 	RegisterTdEngine(conf []tdengine.Conf)
-	RegisterTd(conf []td.Conf) map[string]*sql.DB
+	RegisterTd(conf []td.Conf) *td.Engine
 }
 
 func New() EdgeCommon {
@@ -57,7 +56,7 @@ func (e *engine) RegisterTdEngine(conf []tdengine.Conf) {
 	tdengine.InitTdEngine(conf)
 }
 
-func (e *engine) RegisterTd(conf []td.Conf) map[string]*sql.DB {
+func (e *engine) RegisterTd(conf []td.Conf) *td.Engine {
 	return td.InitTd(conf)
 }
 
