@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-type Conf struct {
+type CollectorConf struct {
 	InsName      string `json:"ins_name"`
 	Driver       string `json:"driver"`
 	Network      string `json:"network"`
@@ -24,24 +24,19 @@ type Engine struct {
 	TDGroup
 }
 
-func InitTd(tdConf []Conf) *Engine {
-	tdEnginePool := make([]*sql.DB, 0)
-
-	for _, conf := range tdConf {
-
-		url := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", conf.Username, conf.Password, conf.Network, conf.Addr, conf.Port, conf.Db)
-		db, err := sql.Open(conf.Driver, url)
-		if err != nil {
-			panic("init td engine err : " + err.Error())
-		}
-
-		db.SetMaxIdleConns(conf.MaxIdleConns)
-		//db.SetConnMaxIdleTime(time.Duration(pgsqlConfig.MaxIdleTime) * time.Second)
-		//db.SetConnMaxLifetime(time.Duration(conf.MaxLifeTime) * time.Second)
-		db.SetMaxOpenConns(conf.MaxOpenConns)
-
-		tdEnginePool = append(tdEnginePool, db)
+func CollectorTD(conf CollectorConf) *Engine {
+	conf = Default(conf)
+	url := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", conf.Username, conf.Password, conf.Network, conf.Addr, conf.Port, conf.Db)
+	db, err := sql.Open(conf.Driver, url)
+	if err != nil {
+		panic("init td engine err : " + err.Error())
 	}
-	engin := &Engine{TDGroup{Clients: tdEnginePool}}
-	return engin
+
+	db.SetMaxIdleConns(conf.MaxIdleConns)
+	//db.SetConnMaxIdleTime(time.Duration(pgsqlConfig.MaxIdleTime) * time.Second)
+	//db.SetConnMaxLifetime(time.Duration(conf.MaxLifeTime) * time.Second)
+	db.SetMaxOpenConns(conf.MaxOpenConns)
+
+	engine := &Engine{TDGroup{DB: db}}
+	return engine
 }
