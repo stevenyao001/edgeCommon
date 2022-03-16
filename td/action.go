@@ -29,6 +29,11 @@ type TagsSuper struct {
 	TagsType string
 }
 
+type SQLLable struct {
+	Name string
+	Data interface{}
+}
+
 func (group *TDGroup) Create(table string, data []Tags) error {
 	buffer := bytes.Buffer{}
 	buffer.WriteString("create table ")
@@ -83,7 +88,8 @@ func (group *TDGroup) CreateSuper(table string, tags []Tags, tagsSuper []TagsSup
 	return nil
 }
 
-func (group *TDGroup) Query(sql string, scan func(rows *sql.Rows)) error {
+func (group *TDGroup) Query(table string, scan func(rows *sql.Rows), dest ...string) error {
+	sql := setSelectSQL(table, dest)
 	rows, err := group.DB.Query(sql)
 	if err != nil {
 		return err
@@ -95,7 +101,8 @@ func (group *TDGroup) Query(sql string, scan func(rows *sql.Rows)) error {
 	return nil
 }
 
-func (group *TDGroup) Insert(sql string) error {
+func (group *TDGroup) Insert(table string, ts int64, dest ...SQLLable) error {
+	sql := setInsertSQL(table, ts, dest)
 	_, err := group.DB.Exec(sql)
 	if err != nil {
 		return err
@@ -125,4 +132,53 @@ func (group *TDGroup) DeleteSuper(table string) error {
 		return err
 	}
 	return nil
+}
+
+func setInsertSQL(table string, ts int64, dest []SQLLable) string {
+	buffer := bytes.Buffer{}
+	buffer.WriteString("insert into ")
+	buffer.WriteString(table)
+	buffer.WriteString(" (ts")
+	for _, v := range dest {
+		buffer.WriteString(" ,")
+		buffer.WriteString(v.Name)
+	}
+	buffer.WriteString(") values (")
+	buffer.WriteString(fmt.Sprintf("%d", ts))
+	for _, v := range dest {
+		buffer.WriteString(", ")
+		switch v.Data.(type) {
+		case int:
+			buffer.WriteString(fmt.Sprintf("%d", v.Data))
+		case int32:
+			buffer.WriteString(fmt.Sprintf("%d", v.Data))
+		case int64:
+			buffer.WriteString(fmt.Sprintf("%d", v.Data))
+		case float64:
+			buffer.WriteString(fmt.Sprintf("%f", v.Data))
+		case float32:
+			buffer.WriteString(fmt.Sprintf("%f", v.Data))
+		case bool:
+			buffer.WriteString(fmt.Sprintf("%t", v.Data))
+		case string:
+			buffer.WriteString(fmt.Sprintf("%s", v.Data))
+		}
+	}
+	buffer.WriteString(")")
+	return buffer.String()
+}
+
+func setSelectSQL(table string, dest []string) string {
+	bufferTmp := bytes.Buffer{}
+	bufferTmp.WriteString("select ")
+	for _, v := range dest {
+		bufferTmp.WriteString(v)
+		bufferTmp.WriteString(",")
+	}
+	buffer := bytes.Buffer{}
+	buffer.WriteString(bufferTmp.String()[:bufferTmp.Len()-1])
+	buffer.WriteString(" from ")
+	buffer.WriteString(table)
+	buffer.WriteString(" order by ts desc limit 1")
+	return buffer.String()
 }
