@@ -3,6 +3,7 @@ package td
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/taosdata/driver-go/v2/taosRestful"
 )
 
 type Engine struct {
