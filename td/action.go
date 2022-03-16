@@ -1,37 +1,57 @@
 package td
 
 import (
+	"bytes"
 	"database/sql"
 )
 
-type DataAction interface {
+type TableAction interface {
+	Create()
 	Query()
-	Scan()
 	Exec()
 }
 
 type TDGroup struct {
 	Clients []*sql.DB
-	Rows    []*sql.Rows
 }
 
-func (group *TDGroup) Query(sql string) error {
+type listData struct {
+	Name     string
+	ListType string
+}
+
+func (group *TDGroup) Create(table string, data ...listData) error {
+	buffer := bytes.Buffer{}
+	buffer.WriteString("create stable ")
+	buffer.WriteString(table)
+	buffer.WriteString(" (ts timestamp")
+	for _, v := range data {
+		buffer.WriteString(", ")
+		buffer.WriteString(v.Name)
+		buffer.WriteString(" ")
+		buffer.WriteString(v.ListType)
+	}
+	buffer.WriteString(" tags (name nchar(20))")
+
+	for _, db := range group.Clients {
+		_, err := db.Exec(buffer.String())
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (group *TDGroup) Query(sql string, scan func(rows *sql.Rows)) error {
 	for _, db := range group.Clients {
 		rows, err := db.Query(sql)
 		if err != nil {
 			return err
 		}
-		group.Rows = append(group.Rows, rows)
-	}
-	return nil
-}
-
-func (group *TDGroup) Scan(dest ...interface{}) error {
-	for _, rows := range group.Rows {
-		defer rows.Close()
 		for rows.Next() {
-			return rows.Scan(dest)
+			scan(rows)
 		}
+		rows.Close()
 	}
 	return nil
 }

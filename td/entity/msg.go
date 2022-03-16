@@ -1,9 +1,9 @@
 package entity
 
 type UserTd struct {
-	MegnetStatus bool `json:"megnet_status"`
-	Ia           int  `json:"ia"`
-	Ep           int  `json:"ep"`
+	MegnetStatus bool  `json:"megnet_status"`
+	Ia           int   `json:"ia"`
+	Ep           int64 `json:"ep"`
 }
 
 type UserTdGK struct {
