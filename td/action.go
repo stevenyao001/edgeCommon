@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-type DataAction interface {
+type TDAction interface {
 	Create()
 	CreateSuper()
 	Query()
