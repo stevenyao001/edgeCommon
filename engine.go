@@ -22,7 +22,7 @@ type EdgeCommon interface {
 	RegisterPgsql(conf []pgsql.Conf)
 	RegisterRedis(conf []redis.Conf)
 	RegisterTdEngine(conf []tdengine.Conf)
-	RegisterTd(conf []td.Conf) *td.Engine
+	RegisterTd(conf []td.CollectorConf) *td.Engine
 }
 
 func New() EdgeCommon {
@@ -56,8 +56,8 @@ func (e *engine) RegisterTdEngine(conf []tdengine.Conf) {
 	tdengine.InitTdEngine(conf)
 }
 
-func (e *engine) RegisterTd(conf []td.Conf) *td.Engine {
-	return td.InitTd(conf)
+func (e *engine) RegisterTd(conf []td.CollectorConf) *td.Engine {
+	return td.CollectorTD(conf[0])
 }
 
 func (e *engine) RegisterHttp(conf http.Conf, middleware ...gin.HandlerFunc) {
