@@ -8,6 +8,7 @@ import (
 
 type TDAction interface {
 	AddLabelData()
+	CleanLabelData()
 	Create()
 	CreateSuper()
 	Query()
@@ -42,6 +43,10 @@ func (group *TDGroup) AddLabelData(name string, data interface{}) {
 		Data: data,
 	}
 	group.Labels = append(group.Labels, tmp)
+}
+
+func (group *TDGroup) CleanLabelData() {
+	group.Labels = group.Labels[0:0]
 }
 
 func (group *TDGroup) Create(table string, data []Tags) error {
@@ -98,14 +103,14 @@ func (group *TDGroup) CreateSuper(table string, tags []Tags, tagsSuper []TagsSup
 	return nil
 }
 
-func (group *TDGroup) Query(table string) ([][]interface{}, error) {
+func (group *TDGroup) Query(table string, order string, limit string) ([][]interface{}, error) {
 	var (
-		num        int
-		scanReplay []interface{}
-		replay     [][]interface{}
-		err        error
+		num    int
+		replay [][]interface{}
+		err    error
 	)
-	sql := setSelectSQL(group, table)
+	replay = make([][]interface{}, 0)
+	sql := setSelectSQL(group, table, order, limit)
 	rows, err := group.DB.Query(sql)
 	if err != nil {
 		return nil, err
@@ -115,18 +120,16 @@ func (group *TDGroup) Query(table string) ([][]interface{}, error) {
 	dataTmp := make([]interface{}, len(group.Labels))
 
 	for rows.Next() {
-		for rows.Next() {
-			num = len(dataTmp)
-			if num == 3 {
-				scanReplay, err = scanThreeTmp(rows, dataTmp)
-			} else if num == 5 {
-				scanReplay, err = scanFiveTmp(rows, dataTmp)
-			}
-			if err != nil {
-				return nil, err
-			}
-			replay = append(replay, scanReplay)
+		num = len(dataTmp)
+		if num == 3 {
+			err = scanThreeTmp(rows, dataTmp)
+		} else if num == 5 {
+			err = scanFiveTmp(rows, dataTmp)
 		}
+		if err != nil || dataTmp == nil {
+			return nil, err
+		}
+		replay = append(replay, dataTmp)
 	}
 	return replay, nil
 }
@@ -198,7 +201,7 @@ func setInsertSQL(group *TDGroup, table string, ts int64) string {
 	return buffer.String()
 }
 
-func setSelectSQL(group *TDGroup, table string) string {
+func setSelectSQL(group *TDGroup, table string, order string, limit string) string {
 	bufferTmp := bytes.Buffer{}
 	bufferTmp.WriteString("select ")
 	for _, v := range group.Labels {
@@ -209,24 +212,25 @@ func setSelectSQL(group *TDGroup, table string) string {
 	buffer.WriteString(bufferTmp.String()[:bufferTmp.Len()-1])
 	buffer.WriteString(" from ")
 	buffer.WriteString(table)
-	buffer.WriteString(" order by ts desc limit 1")
+	buffer.WriteString(" ")
+	buffer.WriteString(order)
+	buffer.WriteString(" ")
+	buffer.WriteString(limit)
 	return buffer.String()
 }
 
-func scanThreeTmp(rows *sql.Rows, data []interface{}) (replay []interface{}, err error) {
-	err = rows.Scan(&data[0], &data[1], &data[2])
+func scanThreeTmp(rows *sql.Rows, data []interface{}) error {
+	err := rows.Scan(&data[0], &data[1], &data[2])
 	if err != nil {
-		return nil, err
+		return err
 	}
-	replay = append(replay, data[0], data[1], data[2])
-	return replay, nil
+	return nil
 }
 
-func scanFiveTmp(rows *sql.Rows, data []interface{}) (replay []interface{}, err error) {
-	err = rows.Scan(&data[0], &data[1], &data[2], &data[3], &data[4])
+func scanFiveTmp(rows *sql.Rows, data []interface{}) error {
+	err := rows.Scan(&data[0], &data[1], &data[2], &data[3], &data[4])
 	if err != nil {
-		return nil, err
+		return err
 	}
-	replay = append(replay, data[0], data[1], data[2], data[3], data[4])
-	return replay, nil
+	return nil
 }
