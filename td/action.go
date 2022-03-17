@@ -122,6 +122,7 @@ func (group *TDGroup) CreateSuper(table string) error {
 }
 
 func (group *TDGroup) Query(table string, order string, limit string) ([][]interface{}, error) {
+	defer group.cleanLabelData()
 	var (
 		num    int
 		replay [][]interface{}
@@ -155,6 +156,7 @@ func (group *TDGroup) Query(table string, order string, limit string) ([][]inter
 }
 
 func (group *TDGroup) Insert(table string, ts int64) error {
+	defer group.cleanLabelData()
 	sql := setInsertSQL(group, table, ts)
 	_, err := group.DB.Exec(sql)
 	if err != nil {
@@ -200,7 +202,6 @@ func (group *TDGroup) cleanSuperTagData() {
 }
 
 func setInsertSQL(group *TDGroup, table string, ts int64) string {
-	defer group.cleanLabelData()
 	buffer := bytes.Buffer{}
 	buffer.WriteString("insert into ")
 	buffer.WriteString(table)
@@ -235,7 +236,6 @@ func setInsertSQL(group *TDGroup, table string, ts int64) string {
 }
 
 func setSelectSQL(group *TDGroup, table string, order string, limit string) string {
-	defer group.cleanLabelData()
 	bufferTmp := bytes.Buffer{}
 	bufferTmp.WriteString("select ")
 	for _, v := range group.Labels {
