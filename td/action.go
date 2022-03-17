@@ -8,7 +8,8 @@ import (
 
 type TDAction interface {
 	AddLabelData()
-	CleanLabelData()
+	AddTagData()
+	AddSuperTagData()
 	Create()
 	CreateSuper()
 	Query()
@@ -18,8 +19,10 @@ type TDAction interface {
 }
 
 type TDGroup struct {
-	DB     *sql.DB
-	Labels []SQLLabel
+	DB        *sql.DB
+	Labels    []SQLLabel
+	Tags      []Tags
+	SuperTags []SuperTags
 }
 
 type Tags struct {
@@ -27,7 +30,7 @@ type Tags struct {
 	TagsType string
 }
 
-type TagsSuper struct {
+type SuperTags struct {
 	Name     string
 	TagsType string
 }
@@ -45,16 +48,29 @@ func (group *TDGroup) AddLabelData(name string, data interface{}) {
 	group.Labels = append(group.Labels, tmp)
 }
 
-func (group *TDGroup) CleanLabelData() {
-	group.Labels = group.Labels[0:0]
+func (group *TDGroup) AddTagData(name string, tagsType string) {
+	tmp := Tags{
+		Name:     name,
+		TagsType: tagsType,
+	}
+	group.Tags = append(group.Tags, tmp)
 }
 
-func (group *TDGroup) Create(table string, data []Tags) error {
+func (group *TDGroup) AddSuperTagData(name string, tagsType string) {
+	tmp := SuperTags{
+		Name:     name,
+		TagsType: tagsType,
+	}
+	group.SuperTags = append(group.SuperTags, tmp)
+}
+
+func (group *TDGroup) Create(table string) error {
+	defer group.cleanTagData()
 	buffer := bytes.Buffer{}
 	buffer.WriteString("create table ")
 	buffer.WriteString(table)
 	buffer.WriteString("(ts timestamp")
-	for _, v := range data {
+	for _, v := range group.Tags {
 		buffer.WriteString(", ")
 		buffer.WriteString(v.Name)
 		buffer.WriteString(" ")
@@ -71,9 +87,11 @@ func (group *TDGroup) Create(table string, data []Tags) error {
 	return nil
 }
 
-func (group *TDGroup) CreateSuper(table string, tags []Tags, tagsSuper []TagsSuper) error {
+func (group *TDGroup) CreateSuper(table string) error {
+	defer group.cleanTagData()
+	defer group.cleanSuperTagData()
 	bufferTmp := bytes.Buffer{}
-	for _, v := range tags {
+	for _, v := range group.Tags {
 		bufferTmp.WriteString(v.Name)
 		bufferTmp.WriteString(" ")
 		bufferTmp.WriteString(v.TagsType)
@@ -84,7 +102,7 @@ func (group *TDGroup) CreateSuper(table string, tags []Tags, tagsSuper []TagsSup
 	buffer.WriteString("create stable ")
 	buffer.WriteString(table)
 	buffer.WriteString(" (ts timestamp")
-	for _, v := range tagsSuper {
+	for _, v := range group.SuperTags {
 		buffer.WriteString(", ")
 		buffer.WriteString(v.Name)
 		buffer.WriteString(" ")
@@ -169,7 +187,20 @@ func (group *TDGroup) DeleteSuper(table string) error {
 	return nil
 }
 
+func (group *TDGroup) cleanLabelData() {
+	group.Labels = group.Labels[0:0]
+}
+
+func (group *TDGroup) cleanTagData() {
+	group.Tags = group.Tags[0:0]
+}
+
+func (group *TDGroup) cleanSuperTagData() {
+	group.SuperTags = group.SuperTags[0:0]
+}
+
 func setInsertSQL(group *TDGroup, table string, ts int64) string {
+	defer group.cleanLabelData()
 	buffer := bytes.Buffer{}
 	buffer.WriteString("insert into ")
 	buffer.WriteString(table)
@@ -204,6 +235,7 @@ func setInsertSQL(group *TDGroup, table string, ts int64) string {
 }
 
 func setSelectSQL(group *TDGroup, table string, order string, limit string) string {
+	defer group.cleanLabelData()
 	bufferTmp := bytes.Buffer{}
 	bufferTmp.WriteString("select ")
 	for _, v := range group.Labels {
