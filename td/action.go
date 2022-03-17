@@ -125,6 +125,8 @@ func (group *TDGroup) Query(table string, order string, limit string) ([][]inter
 			err = scanThreeTmp(rows, dataTmp)
 		} else if num == 5 {
 			err = scanFiveTmp(rows, dataTmp)
+		} else if num == 6 {
+			err = scanSixTmp(rows, dataTmp)
 		}
 		if err != nil || dataTmp == nil {
 			return nil, err
@@ -229,6 +231,14 @@ func scanThreeTmp(rows *sql.Rows, data []interface{}) error {
 
 func scanFiveTmp(rows *sql.Rows, data []interface{}) error {
 	err := rows.Scan(&data[0], &data[1], &data[2], &data[3], &data[4])
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func scanSixTmp(rows *sql.Rows, data []interface{}) error {
+	err := rows.Scan(&data[0], &data[1], &data[2], &data[3], &data[4], &data[5])
 	if err != nil {
 		return err
 	}
