@@ -25,17 +25,17 @@ type Commputing struct{}
 
 var middle map[string]interface{}
 
-func (c *Commputing) InitMiddle(path string) {
+func (c *Commputing) InitMiddle(path string) error {
 	middle = make(map[string]interface{}, 0)
 
 	ruleD := make([]ruleData, 5)
 	f, err := ioutil.ReadFile(path)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	err = json.Unmarshal(f, &ruleD)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	for _, value := range ruleD {
 		if value.Type == "int" {
@@ -44,6 +44,7 @@ func (c *Commputing) InitMiddle(path string) {
 			middle[value.Name] = true
 		}
 	}
+	return nil
 }
 
 func (c *Commputing) Computing(buf []byte, path string) ([]byte, error) {
@@ -53,13 +54,16 @@ func (c *Commputing) Computing(buf []byte, path string) ([]byte, error) {
 		return nil, err
 	}
 
-	framework(ruleDatas, input)
+	err = framework(ruleDatas, input)
+	if err != nil {
+		return nil, err
+	}
 
 	pushMiddleData(input, ruleDatas)
 	return json.Marshal(input)
 }
 
-func framework(ruleDatas []ruleData, input map[string]interface{}) {
+func framework(ruleDatas []ruleData, input map[string]interface{}) error {
 	var ruleTtmp string
 	for _, value := range ruleDatas {
 		ruleTtmp = ruleTtmp + value.Rule + "\n"
@@ -71,12 +75,12 @@ func framework(ruleDatas []ruleData, input map[string]interface{}) {
 	ruleBuilder := builder.NewRuleBuilder(dataContext)
 	err := ruleBuilder.BuildRuleFromString(ruleTtmp)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	gengine := engine.NewGengine()
 	err = gengine.Execute(ruleBuilder, true)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	resultMap, _ := gengine.GetRulesResultMap()
 	for key, value := range ruleDatas {
@@ -84,6 +88,7 @@ func framework(ruleDatas []ruleData, input map[string]interface{}) {
 			input[value.Name] = resultMap[strconv.Itoa(key)]
 		}
 	}
+	return nil
 }
 
 func propertiesAdd(ruleDatas []ruleData, input map[string]interface{}, middle map[string]interface{}, dataContext *context.DataContext) {
